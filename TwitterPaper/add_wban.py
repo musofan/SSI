@@ -18,7 +18,7 @@ dd['weather_station_point'] = station_points
 
 weather_stations = []
 n = len(d.index)
-for i in range(n):
+for i in range(5):
     print i
     city = d.city.loc[i]
     tweet = Point(d.lon.loc[i],d.lat.loc[i])
@@ -26,20 +26,21 @@ for i in range(n):
     
     if len(stations.index) == 0:
         weather_stations.append('nan')
+    
     else:
         stations.reset_index(drop=True,inplace=True)
-        station_points = []
-        m = len(stations.index)
-        for j in range(m):
-            tmp = Point(stations.Longitude.loc[j],stations.Latitude.loc[j])
-            station_points.append(tmp)
-        tmp = min(station_points, key = lambda x: x.distance(tweet))
-        weather_stations.append(tmp)
+        stat_wban = {
+        Point(stations.Longitude.loc[j],
+              stations.Latitude.loc[j]): stations.WBAN.loc[j] for j in stations
+                                     }    
+        tmp = min(stat_wban.keys(), key = lambda x: x.distance(tweet))
+        weather_stations.append(stat_wban[tmp])
 
-d['weather_station_point'] = weather_stations
+print weather_stations
 
-dd = dd[['WBAN','weather_station_point']]
-dd.set_index('weather_station_point',inplace=True)
-d = d.join(dd,on='weather_station_point')
-d.to_csv('/Users/damoncrockett/Dropbox/TwitterPaper/data/twitter/US_HSV_modes_top60_cities_ua_wban.csv',
-        index=False)
+#d['weather_station_point'] = weather_stations
+
+#dd = dd[['WBAN','weather_station_point']]
+#dd.set_index('weather_station_point',inplace=True)
+#d = d.join(dd,on='weather_station_point')
+#d.to_csv('/Users/damoncrockett/Dropbox/TwitterPaper/data/twitter/US_HSV_modes_top60_cities_ua_wban.csv',index=False)
