@@ -1,0 +1,570 @@
+---
+title: "Instagram & NOAA Weather Data Aggregate Analysis"
+author: "Damon Crockett"
+date: "01/18/2015"
+output: html_document
+---
+
+## Aggregate, grouped by timestamps from the weather data
+
+We have a dataset that joined NOAA weather data to IG data from NYC during Feb 26 - Aug 3, 2014. See this ipython notebook for a detailed look at the process of creating this dataset:
+
+http://nbviewer.ipython.org/github/damoncrockett/SSI/blob/master/IGNOAA/scripts/NYC%20Instagram%20Weather.ipynb
+
+```{r}
+core = read.csv('/Users/damoncrockett/Dropbox/CALIT2DATA/IGNOAA/instagram_by_resolution.csv')
+core$X = NULL
+str(core)
+```
+
+Let's take a look at our response variable, 'count', which measures the number of IG posts made in the vicinity of Central Park, NYC, for a given hourly period. No IG post has more than 1 hour of error between its own timestamp and the weather timestamp.
+
+```{r}
+library(ggplot2)
+qplot(core$count, binwidth=10)
+summary(core$count)
+var(core$count)
+```
+
+The distribution of counts is not normal around the mean (118); this is typical for count data. We have a range from 1 to 872, we see a mode peak around 20, a steep dropoff after that, and a smooth descent to zero from about 50 onward to 700. 
+
+Because this is count data, it might make sense to use a Poisson regression model. However, our data is very 'over-dispersed', which means that the variance is higher than the mean, and so we're better off using a negative binomial model (strictly speaking, it is the conditional means and variances that matter here, but overdispersion is so obvious in this case that it doesn't matter).
+
+# Weather Regressors
+## Temperature
+
+```{r}
+library(MASS)
+summary(glm.nb(data=core, count~temp))
+ggplot(core, aes(temp,count)) + 
+  geom_point(alpha=0.2) +
+  stat_smooth(method=loess) +
+  ylab('Average Hourly Instagram Post Count') +
+  xlab('Temperature in Degrees Fahrenheit')
+```
+
+Temp is a significant regressor on count, and we can see from the graph that this is mostly because average hourly post counts increase sharply starting around 65 degrees Fahrenheit.
+
+As a kind of aside: for the sort of research we're doing here, p-values don't matter that much. We have nearly 4,500 data points, and so statistical significance comes cheap. We are more interested in effect size, and really, you can usually see that with a plot. The models will be more useful when it comes to controlling for variables and finding relationships we can then plot, but I will continue to look at regression output just as a matter of procedural consistency. A further point: when we plot, we are plotting the raw data, not data from the fitted model. We could do the latter, but it's a pain, so we'll just keep that in mind when we're looking at our plots.
+
+## Wind
+
+```{r}
+summary(glm.nb(data=core, count~wind))
+exp(coef(glm.nb(data=core, count~wind)))
+ggplot(core, aes(wind,count)) + 
+  geom_point(alpha=0.2) +
+  stat_smooth(method=loess)
+```
+
+Here is a perfect example of what I'm talking about: wind is a VERY significant regressor on post count, but the effect size is small, and the plot shows the relationship to be pretty uninteresting. Also, the relationship doesn't look to be well-modeled by anything linear (it looks more quadratic). 
+
+## Sky (i.e., cloud cover)
+
+```{r}
+summary(glm.nb(data=core, count~factor(sky)))
+ggplot(core, aes(factor(sky),count)) + 
+  geom_boxplot() +
+  ylab('Average Hourly Instagram Post Count') +
+  xlab('Proportion of Sky Covered by Clouds')
+```
+
+This is somewhat more interesting. Let's take a closer look:
+
+```{r}
+exp(coef(glm.nb(data=core, count~factor(sky))))
+```
+
+Clear and partly cloudy skies are not interestingly different (nor even are they significantly different, as the above regression output shows). However, once we have mostly cloudy and overcast skies, post counts drop. Post counts in overcast conditions are cut in half relative even to partly cloudy skies.  
+
+## Precipitation
+
+```{r}
+summary(glm.nb(data=core, count~precipitation))
+ggplot(core, aes(precipitation,count)) + 
+  geom_point(alpha=0.2) +
+  stat_smooth()
+```
+
+It looks as if post counts drop to half once it rains at least a tenth of an inch, but aren't much affected by levels of rain above that. Let's make a rain/no rain variable, and look at the difference in mean post counts:
+
+```{r}
+core$rain = core$precipitation > 0.0125
+exp(coef(glm.nb(data=core, count~rain)))
+```
+
+So, post count halves with rain above 0.0125 inches. Now, it's tough to say exactly what that condition is like, since the rain measure is just an accumulated total for the hour. But we can see from this output that a condition this 'extreme' is pretty rare for any given hour period (4.5% of all hour periods):
+
+```{r}
+table(core$rain)
+length(core$rain[core$rain==1])/length(core$rain)
+```
+
+Okay, so now we have some idea of the effects of weather on post count. We'll revisit these later on, and control for various factors, but first, let's look just at the IG data itself to find some trends.
+
+# Instagram Patterns
+
+**weekday**
+
+```{r}
+summary(glm.nb(data=core, count~factor(weekday)))
+exp(coef(glm.nb(data=core, count~factor(weekday))))
+```
+
+Some interesting weekday trends. Let's plot (the raw data, mind):
+
+```{r}
+ggplot(core, aes(factor(weekday), count)) + geom_boxplot() +
+  ylab('Average Hourly Instagram Post Count') +
+  xlab('Weekday')
+```
+
+A quadratic relationship, in fact (if we are treating weekday as a linear axis - a measure of 'lateness-in-the-week', perhaps). Note that Sunday (7) is the highest volume day; this is likely because there is lots of late-night Saturday posting, and Sunday takes the credit for anything after midnight.
+
+Let's look at weekdays vs. weekend days:
+
+```{r}
+core$weekend = core$weekday > 5
+exp(coef(glm.nb(data=core,count~factor(weekend))))
+```
+
+The weekend mean is 137% of the weekday mean.
+
+**hourly**
+
+```{r}
+summary(glm.nb(data=core,count~factor(hour)))
+```
+
+Lots of very significant effects of hour. Let's plot this: 
+
+```{r}
+ggplot(core, aes(factor(hour), count)) + geom_boxplot() +
+  ylab('Average Hourly Instagram Post Count') +
+  xlab('Hour')
+```
+
+As we might expect, posts drop to a trickle around 4am and peak in the afternoon/evening. Let's see how this interacts with weekday:
+
+```{r}
+library(plyr)
+
+by.weekday = ddply(core, c('weekday','hour'), summarize,
+                   mean = mean(count))
+
+ggplot(data=by.weekday, aes(x=factor(hour), y=mean, group=factor(weekday), color=factor(weekday))) + 
+  geom_line() +
+  xlab('Hour') +
+  ylab('Average Hourly Instagram Post Count') +
+  scale_color_discrete(name="Weekday")
+```
+
+This is actually unexpected. I had thought that the high volume Sunday posting was due to lots of late-nite Saturday posts from bars. But in fact, Sunday has the highest volume all throughout the period from 10a til 11p. Saturday is a close-ish second, but Sunday is very clearly the winner. Tough to say why Sunday would beat Saturday even during 'bar' hours.
+
+**monthly**
+
+```{r}
+summary(glm.nb(data=core,count~factor(month)))
+exp(coef(glm.nb(data=core,count~factor(month))))
+```
+
+There are differences here. Let's plot:
+
+```{r}
+ggplot(core, aes(factor(month), count)) + geom_boxplot()
+```
+
+Februrary and August look unusually low, and this is certainly explained by the fact there are only 3 recorded days in each of those months (our IG data is from Feb 26 to Aug 3). We must ignore those for the purposes of monthly trends, and since the middle 5 months look pretty uninteresting, we can drop this thread. 
+
+# Weather Regressors: Explanation
+
+## Temperature
+
+We know that posts go up when the weather hits 65, and they keep increasing as it gets hotter. What could explain this? Here's some possibilities:
+
+1. Time of day: people post less at night, and it's colder at night.
+
+2. Season: young people in school are very active on IG, and so probably drive a lot of activity on the site, and they post more during the summer when they are out of school. It's warmer in summer.
+
+### Time of Day
+
+Okay, so let's consider time of day. Remember our count by hour plot:
+
+```{r}
+ggplot(core, aes(factor(hour), count)) + geom_boxplot() +
+  ylab('Average Hourly Instagram Post Count') +
+  xlab('Hour')
+```
+
+Now let's look at a plot of temperature by hour:
+
+```{r}
+ggplot(core, aes(factor(hour), temp)) + geom_boxplot() +
+  ylab('Average Temperature in Degrees Fahrenheit') +
+  xlab('Hour')
+```
+
+So, it's hottest between noon and 3. Post counts are highest between 2 and 4. There is some overlap here, but clearly the effect of temperature on post count is not explained away by hour. We can see this in the plots, and verify it with an ANOVA:
+
+```{r}
+m0 = glm.nb(data=core, count~factor(hour))
+m1 = glm.nb(data=core, count~factor(hour) + temp)
+anova(m0,m1)
+```
+
+Temp is still a very significant regressor (p < 0.001) on post count, even after controlling for hour.
+
+### Season
+
+Let's now consider the 'school year' explanation. According to that explanation, post counts increase when it's hot because students are out of school, not because higher temperatures matter in themselves. In order for this explanation to work, it would have to be the case that summer months are hotter, and that post counts increase in the summer months. Let's take a look:
+
+```{r}
+ggplot(core, aes(factor(date), temp)) + 
+  geom_path(aes(color=factor(month))) +
+  xlab('Date') +
+  ylab('Temperature in Degrees Fahrenheit') +
+  scale_color_discrete(name='Month') +
+  stat_smooth(aes(group=1), color='white', se=F)
+```
+
+Summer months are surely hotter, and indeed the days with temperatures above 65 are mostly in the summer months. The average temperature (white curve) doesn't hit 65 until about mid-June.
+
+```{r}
+ggplot(core, aes(factor(date), count)) + 
+  geom_path(aes(color=factor(month))) +
+  xlab('Date') +
+  ylab('Range of Hourly Instagram Post Counts') +
+  scale_color_discrete(name='Month') +
+  stat_smooth(aes(group=1), color='white', se=F)
+```
+
+This plot shows that it's not even true that IG posting increases in summer. The white curve is a local estimate line that shows that, on average, post counts sort of undulate through the months. The highest peaks are in May, in fact, and there is a period of a couple days in July where the counts have a quite high floor, but beyond that, there is no evidence in favor of the 'school year' hypothesis.
+
+An ANOVA will confirm:
+
+```{r}
+core$summer = core$month > 5
+m0 = glm.nb(data=core, count~factor(summer))
+m1 = glm.nb(data=core, count~factor(summer) + temp)
+anova(m0,m1)
+```
+
+Indeed, temperature is a significant regressor on count even after controlling for whether school is in session or not.
+
+```{r}
+m0 = glm.nb(data=core, count~factor(summer) * factor(hour))
+m1 = glm.nb(data=core, count~factor(summer) * factor(hour) + temp)
+anova(m0,m1)
+```
+
+Finally, even if we control for both season and hour and any interactions between them, temp is still a significant regressor.
+
+### aside...
+
+As an aside, we should check what's going on during those few days in July when post counts do not fall below ~110 or so. I'm guessing it's something funky in the data. Let's 'zoom in' on the plot:
+
+```{r}
+ggplot(core[core$month==7,], aes(factor(date), count)) + 
+  geom_path(aes(color=factor(month))) +
+  xlab('Date') +
+  ylab('Range of Hourly Instagram Post Counts') +
+  scale_color_discrete(name='Month') +
+  stat_smooth(aes(group=1), color='white', se=F)
+```
+
+So, the dates are July 19 and 20. Let's look:
+
+```{r}
+subset(core, core$date == '2014-07-19' | core$date == '2014-07-20')
+```
+
+Yes, we are missing some data here. There are only 4 weather readings for July 19, and only 12 for July 20. Thus, we needn't look any further why the minimum post counts for these days fail to drop below 100.
+
+### Back to temp...
+
+Back to the temperature effect. We now have convincing evidence that temperature can affect the volume of posts on Instagram irrespective of time of day and season. Just for peace of mind, we can even look at some additional time-of-day variables. The rationale here is that a skeptic might still say: 
+
+"Post counts increase when the temperature is above 65. That's just because whenever it's that hot, people are awake, and so they post more. The high temperature is simply selecting a time of day that has high post volume for reasons unrelated to temperature." 
+
+Well, we've already gone at least some of the way to showing that the skeptic is wrong, but we can test his hypothesis even more directly than we have yet:
+
+```{r}
+core$daylight = core$hour > 6 & core$hour < 19
+core$waking = core$hour > 5 & core$hour < 23
+core$high.volume.hours = core$hour > 9 & core$hour < 23
+core$peak.hours = core$hour > 11 & core$hour < 20
+m0 = glm.nb(data=core, count~daylight)
+m1 = glm.nb(data=core, count~waking)
+m2 = glm.nb(data=core, count~high.volume.hours)
+m3 = glm.nb(data=core, count~peak.hours)
+m4 = glm.nb(data=core, count~daylight + temp)
+m5 = glm.nb(data=core, count~waking + temp)
+m6 = glm.nb(data=core, count~high.volume.hours + temp)
+m7 = glm.nb(data=core, count~peak.hours + temp)
+anova(m0,m4)
+anova(m1,m5)
+anova(m2,m6)
+anova(m3,m7)
+```
+
+Still significant, even after considering the effect of daylight, waking hours, high volume hours, and peak hours. We can't seem to suppress this effect by considering alternative hypotheses, so we can confidently say that temperature itself has an effect on Instagram activity - in Central Park, at least. We also know from our original plot that the effect of temperature is piece-wise linear: we don't really see it below 65 F, but above that, there is a positive linear correlation between post volume and temperature.
+
+Because of this, it's tough to get a good estimate of the effect size. According to a model that includes hour, the effect of temperature looks like this:
+
+```{r}
+m = glm.nb(data=core, count~factor(hour) + temp)
+exp(m$coef['temp'])
+```
+
+But we know that this is misleading, because the effect is piece-wise. We can run the model on a subset of the data above 65 degrees F, and we get this:
+
+```{r}
+m0 = glm.nb(data=core[core$temp > 65,], count~temp)
+m1 = glm.nb(data=core[core$temp > 65,], count~factor(hour) + temp)
+m2 = glm.nb(data=core[core$temp > 65,], count~factor(hour) + factor(weekday) + factor(month) + sky + temp + rain)
+exp(m0$coef['temp'])
+exp(m1$coef['temp'])
+exp(m2$coef['temp'])
+```
+
+According to this model, the effect of temperature on posting volume over and above the effect of hour is as follows: for every single digit increase in temperature above 65 F, average post count increases by 1.3%. Had we not accounted for hour, the increase would be 5%.
+
+```{r}
+exp(m2$coef['temp'] * 20)
+```
+
+In the full model, in the subset of the data in which temp affects count, an increase from 66 F (our intercept) to 86 F means, on average, a 53% increase in hourly post count, regardless of which hour of the day we are in (although 86 F at night appears to be nonexistent in this dataset).
+
+Finally, we can look at some potential interactions between temp and other variables:
+
+```{r}
+summary(glm.nb(data=core,count~daylight*temp))
+summary(glm.nb(data=core,count~waking*temp))
+summary(glm.nb(data=core,count~high.volume.hours*temp))
+summary(glm.nb(data=core,count~peak.hours*temp))
+summary(glm.nb(data=core,count~summer*temp))
+summary(glm.nb(data=core,count~month*temp))
+summary(glm.nb(data=core,count~weekday*temp))
+```
+
+There is an interaction between temp and waking hours, and temp and summer, as well as temp and month (these could be the same thing). Let's look at this:
+
+```{r}
+by.waking = ddply(core, c('waking','temp'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.waking, aes(x=temp, y=count, group=waking, color=waking)) + 
+  stat_smooth()
+```
+
+The effect of temp on count is much more pronounced during waking hours, which we might expect, especially since our temp effect really only applies when it's very warm.
+
+```{r}
+by.month = ddply(core, c('month','temp'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.month, aes(x=temp, y=count, group=factor(month), color=factor(month))) + 
+  stat_smooth(se=F,method=lm)
+```
+
+Ok I've sort of fudged the graph to be more readable; what we're seeing here is that the effect of temp on count is more pronounced in the warmer months. This makes sense, since the effect is only seen above 65 F. Thus, the months that spend more time in this range will see the effect more often.
+
+## Precipitation
+
+When it rains, people post less. But is this because of the rain? Let's consider some potential confounding variables. 
+
+We wouldn't expect rain to be correlated with things like hour and weekday, but let's see:
+
+```{r}
+library(gmodels)
+CrossTable(core$hour, core$rain, expected=TRUE)
+CrossTable(core$weekday, core$rain, expected=TRUE)
+```
+
+Okay, that's strange. Rain and weekday appear not to be independent in our dataset. It rains less on Sundays than we would expect if the variables were independent. This could matter, actually, because we saw that Sunday has the highest posting volume of any day, and so if it rains less on those days, that could drive some of this effect. Let's see:
+
+```{r}
+core$sunday = core$weekday == 7
+m0 = glm.nb(data=core, count~sunday)
+m1 = glm.nb(data=core, count~sunday+rain)
+anova(m0,m1)
+```
+
+Okay, the rain regressor is significant over and above what is accounted for by its being Sunday. 
+
+We might think rain is correlated with a 'seasonal' variable (like winter, spring, summer), but if it is, it's also likely going to be part of any explanation involving that season. So if a 'rainy' season (like spring?) has an effect on posts, then rain has an effect on posts. But is rain even correlated with season?
+
+```{r}
+CrossTable(core$month, core$rain, expected=TRUE)
+```
+
+Looks like rain is correlated with April. It rains more in April than you'd expect if rain and month were independent (and perhaps a little less in June and July). Let's look at some ANOVAs:
+
+
+```{r}
+core$april = core$month == 4
+m0 = glm.nb(data=core,count~month)
+m1 = glm.nb(data=core,count~april)
+m2 = glm.nb(data=core,count~month+rain)
+m3 = glm.nb(data=core,count~april+rain)
+anova(m0,m2)
+anova(m1,m3)
+```
+
+Rain is a significant regressor over and above both month and April.
+
+```{r}
+summary(glm.nb(data=core, count~april))
+```
+
+And anyway, it turns out that people actually post _more_ in April despite posting less on average as it rains more (in any month). So, there's nothing about season that's going to help here.
+
+We also know that wind is not interestingly connected with post count, so it can't be that. What about temp? Well it probably is colder when raining, and fewer post as it gets colder. That could perhaps explain the effect. Let's consider adding rain to a model already containing temp:
+
+```{r}
+m0 = glm.nb(data=core,count~temp)
+m1 = glm.nb(data=core,count~temp+rain)
+anova(m0,m1)
+```
+
+Precipitation is a significant regressor even controlling for temp. Okay, now the biggie: what about sky?
+
+```{r}
+CrossTable(factor(core$sky), core$rain, expected=TRUE)
+```
+
+There is, of course, a very strong correlation between rain and sky. When the sky is clear, it's almost never raining, and when it's completely overcast, it's often raining. We haven't looked in detail at the effect of sky on post count, but we can do an ANOVA with sky and rain here.
+
+```{r}
+m0 = glm.nb(data=core,count~factor(sky))
+m1 = glm.nb(data=core,count~factor(sky)+rain)
+m2 = glm.nb(data=core,count~rain)
+anova(m0,m1)
+```
+
+Rain is significant, even controlling for sky.
+
+```{r}
+exp(m1$coef['rainTRUE'])
+exp(m2$coef['rainTRUE'])
+```
+
+However, adding sky to the model decreases the effect of rain on post volume. Without sky in the model, rain reduces post volume by half; with sky in the model, it is reduced by a quarter. So, cloudy skies account for some of the effect that rain appeared to have on posting volume, but not all of it.
+
+We are justified in claiming, I think, that rain itself affects post volume, and we know that rain is not correlated with the variable 'hour', but what about with any other time-of-day variables?
+
+```{r}
+summary(glm.nb(data=core,count~daylight*rain))
+summary(glm.nb(data=core,count~waking*rain))
+summary(glm.nb(data=core,count~high.volume.hours*rain))
+summary(glm.nb(data=core,count~peak.hours*rain))
+summary(glm.nb(data=core,count~summer*rain))
+summary(glm.nb(data=core,count~month*rain))
+summary(glm.nb(data=core,count~weekday*rain))
+```
+
+Rain remains a significant regressor after controlling for each of these. But we found big interactions with waking hours and weekday. Let's look:
+
+```{r}
+by.rain = ddply(core, c('rain','waking'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.rain, aes(x=rain, y=count, group=waking, color=waking)) + 
+  geom_line() 
+```
+
+During waking hours, the effect of rain on post count is much more pronounced. This makes sense: people awake late in the night are more likely to be posting indoors, and so should be less affected by rain.
+
+```{r}
+by.weekday = ddply(core, c('weekday','rain'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.weekday, aes(x=rain, y=count, group=factor(weekday), color=factor(weekday))) + 
+  geom_line() 
+```
+
+Here, the steeper the slope, the bigger the effect of rain, so we see that Monday, Tuesday, and Thursday see a bigger effect of rain on posting volume, while the intrepid weekenders don't mind the rain as much. The difference between Monday and the weekend is pretty big: perhaps the addition of rain to an already dampened Monday spirit really kills the desire to post to Instagram.
+
+## Sky
+
+Recall that very cloudy skies mean lower post volume. Let's do what we've been doing, and consider potential confounds. Sky, like rain, shouldn't correlate with hour and weekday, but let's take a look:
+
+```{r}
+CrossTable(core$hour,core$sky,expected=1)
+CrossTable(core$weekday,core$sky,expected=1)
+```
+
+Ok, weird, sky is actually correlated with both of these. I suppose we could have expected this, because we found that it rains less on Sunday than on other days (in our data, anyway). This is sort of a meaningless correlation, but we now need to control for hour and weekday in our model.
+
+```{r}
+m0 = glm.nb(data=core,count~factor(hour)+factor(weekday))
+m1 = glm.nb(data=core,count~factor(hour)+factor(weekday)+sky)
+anova(m0,m1)
+```
+
+Sky is a significant regressor over and above hour and weekday. A note here: in the model above, I'm treating sky as a linear axis instead of a factor, because it truly is a linear variable (% cloud cover). For some purposes, like plotting, it's better to have R treat it as a factor, and we may switch between sometimes.
+
+What about the other temporal variables? (I'll consider hour and weekday again because I'm looking for interactions, too)
+
+```{r}
+summary(glm.nb(data=core,count~factor(month)*sky))
+summary(glm.nb(data=core,count~summer*sky))
+summary(glm.nb(data=core,count~daylight*sky))
+summary(glm.nb(data=core,count~waking*sky))
+summary(glm.nb(data=core,count~high.volume.hours*sky))
+summary(glm.nb(data=core,count~peak.hours*sky))
+summary(glm.nb(data=core,count~factor(weekday)*sky))
+summary(glm.nb(data=core,count~factor(hour)*sky))
+```
+
+Sky is a significant regressor in all these models. The interpretation of the p-values here is that they answer the question whether some particular regressor (sky, for us) is significant in a model that already includes all the others. With temperature and rain, I was a little more perspicacious in my hunt for significance and interactions, but here I'm sort of lumping everything together for efficiency.
+
+The interesting variables seem to be month, summer, and weekday. There's a bit of a daylight thing happening, too, though that's to be expected.
+
+```{r}
+by.sky = ddply(core, c('sky','daylight'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.sky, aes(x=sky, y=count, group=daylight, color=daylight)) + 
+  stat_smooth(method=lm,se=F) 
+```
+
+As expected, the dampening effect of cloudiness on post volume is less pronounced when it's dark out. In fact, it's surprising that the difference isn't bigger. Maybe people are more inclined to snap nighttime photos when it's clear, to capture starry skies (or perhaps the moon)?
+
+```{r}
+by.sky = ddply(core, c('sky','month'), summarize,
+                   mean = mean(count))
+
+ggplot(data=by.sky, aes(x=sky, y=mean, group=factor(month), color=factor(month))) + 
+  stat_smooth(method=lm,se=F) 
+```
+
+The effect of sky on post volume is bigger in the summer months. Perhaps people expect clear skies in summer, and when they don't get them, they give up on IG. Or what amounts to the same, perhaps people like to snap outdoor photos that 'fit the season', and so they are okay taking pictures with cloudy skies in spring but not summer. In any case, post volume _really_ drops off on overcast summer days.
+
+```{r}
+by.sky = ddply(core, c('sky','weekday'), summarize,
+                   count = mean(count))
+
+ggplot(data=by.sky, aes(x=sky, y=count, group=factor(weekday), color=factor(weekday))) + 
+  stat_smooth(method=lm,se=F)
+```
+
+We saw this effect with rain: rainy and/or cloudy Mondays really drive down IG posting. The effect is less impressive with sky, but it's there.
+
+Finally, we can control for other weather variables:
+
+```{r}
+m0 = glm.nb(data=core,count~temp+rain)
+m1 = glm.nb(data=core,count~temp+rain+sky)
+anova(m0,m1)
+```
+
+Sky remains a significant regressor even after accounting for temperature and rain.
+
+## Final coefficient estimates
+
+```{r}
+m = glm.nb(data=core,count~factor(hour)+factor(weekday)+factor(month)+sky+temp+rain)
+exp(m$coef)
+```
+

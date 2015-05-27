@@ -1,0 +1,101 @@
+RegionName,overall,purpose,social,financial,community,physical
+North Port,1,11,4,2,12,2
+Honolulu,2,14,70,1,6,26
+Raleigh,3,9,6,13,3,24
+Oxnard,4,6,3,11,8,29
+El Paso,5,1,57,63,23,1
+Austin,6,12,37,37,4,21
+Provo,7,18,9,28,1,47
+San Jose,8,51,44,3,32,4
+Washington,9,27,12,5,35,9
+Winston-Salem,10,34,8,58,14,14
+Los Angeles,11,16,46,40,44,3
+San Francisco,12,48,31,10,33,8
+Houston,13,4,36,22,30,33
+Chattanooga,14,8,1,64,2,59
+Spokane,15,32,38,4,51,23
+San Diego,16,41,53,25,18,15
+Minneapolis,17,53,58,7,16,22
+Omaha,18,38,47,6,10,72
+Cape Coral,19,19,14,33,28,17
+San Antonio,20,13,60,56,11,54
+Richmond,21,31,7,38,27,40
+Dallas,22,10,49,34,24,50
+Charleston,35,5,75,19,32
+Springfield,24,69,16,15,68,10
+Denver,25,39,72,26,22,25
+Grand Rapids,26,52,35,8,17,61
+Boston,27,66,34,20,26,16
+Colorado Springs,28,30,54,87,25,27
+Tucson,29,24,10,41,54,18
+Stockton,30,17,20,21,93,13
+Albuquerque,31,22,69,71,59,7
+Charlotte,32,20,43,65,36,35
+Boise City,33,62,65,68,9,41
+Lancaster,34,71,93,9,13,43
+Miami,35,26,23,92,48,11
+Bridgeport,36,63,88,43,58,5
+Hartford,37,61,30,18,62,20
+Phoenix,38,33,40,48,50,37
+Milwaukee,39,36,29,30,60,30
+Sacramento,40,56,27,45,56,34
+Orlando,41,25,39,84,49,38
+Salt Lake City,42,60,64,74,29,36
+Wichita,43,29,41,16,46,74
+Nashville,44,49,84,61,31,53
+Bakersfield,45,3,2,99,96,31
+Fresno,46,5,89,85,90,12
+Palm Bay,47,70,75,66,37,28
+New Haven,48,47,48,50,91,6
+Atlanta,49,37,42,77,67,42
+Greenville,50,59,55,95,5,70
+Des Moines,51,90,74,23,7,88
+Augusta,52,46,11,90,39,65
+Jacksonville,53,45,45,52,70,45
+Baton Rouge,54,2,19,83,53,87
+New York,55,75,61,60,72,19
+Tulsa,56,7,22,59,21,95
+Riverside,57,23,52,78,75,46
+Little Rock,58,15,28,55,47,83
+Allentown,59,78,32,42,45,55
+Harrisburg,60,54,76,24,43,75
+Greensboro,61,57,62,91,42,73
+Seattle,62,84,66,36,55,58
+Portland,63,91,73,57,41,51
+Chicago,64,50,77,39,79,44
+Madison,65,93,95,17,15,84
+Syracuse,66,44,13,27,78,67
+Ogden,67,92,83,97,20,56
+Albany,68,55,17,14,74,68
+Pittsburgh,69,81,68,12,61,71
+Providence,70,86,92,47,65,52
+Jackson,71,21,63,88,95,63
+Rochester,72,88,71,32,64,76
+Oklahoma City,73,64,51,35,34,92
+Philadelphia,74,72,21,44,82,57
+Columbia,75,43,33,100,92,39
+New Orleans,76,40,80,94,52,79
+Kansas City,77,68,56,49,57,85
+Las Vegas,78,79,87,69,84,49
+Virginia Beach,79,76,50,54,85,62
+Lakeland,80,42,15,93,71,82
+Tampa,81,67,59,79,63,69
+Baltimore,82,83,25,31,94,64
+Memphis,83,28,24,98,89,78
+Cleveland,84,85,94,29,86,60
+Akron,85,82,82,62,88,48
+Louisville,86,74,97,89,40,89
+Worcester,87,99,18,72,80,66
+St. Louis,88,65,67,46,73,90
+Buffalo,89,97,78,19,87,80
+Birmingham,90,58,90,81,66,96
+Cincinnati,91,73,85,53,77,86
+Detroit,92,87,86,70,97,81
+Columbus,93,94,96,80,69,91
+Scranton,94,89,91,51,98,77
+Deltona,95,80,26,82,83,94
+Indianapolis,96,77,98,67,76,99
+Dayton,97,95,79,73,81,98
+Knoxville,98,98,99,96,38,100
+Toledo,99,96,81,86,100,97
+Youngstown,100,100,100,76,99,93

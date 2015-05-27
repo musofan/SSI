@@ -1,0 +1,124 @@
+---
+title: "IGNOAA Individual Analysis"
+author: "Damon Crockett"
+date: "01/25/2015"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+```
+
+for aggregate analysis: http://www.damoncrockett.com/IGNOAA.html
+
+```{r}
+df = read.csv('/home/damoncrockett/Desktop/IGNOAA/instagram_weather.csv')
+```
+
+```{r}
+df$X = NULL
+df$link_author = as.character(df$link_author)
+df$link_author = strsplit(df$link_author, '/')
+df$link_author = lapply(df$link_author, function(x)(x = x[4]))  
+df$link_author = as.character(df$link_author)
+df$link_author = as.factor(df$link_author)
+```
+
+```{r}
+margin = 0.0125
+cp.lon = -73.96917
+cp.lat = 40.77889
+```
+
+
+```{r}
+ggplot(df, aes(x=lon, y=lat)) + 
+  geom_point(color='white', size = 1, alpha = 0.07) +
+  theme(panel.background = element_rect(fill = "black"),
+        panel.grid.major = element_line(color = "black"),
+        panel.grid.minor = element_line(color = "black"),
+        plot.background = element_rect(fill = "black"),
+        legend.position="none",
+        axis.text = element_text(size=rel(0.7), color='white'),
+        text = element_text(family='arial', face='plain', color='white', size = 15)) +
+  labs(x='LON',y='LAT', title='CENTRAL PARK') +
+  xlim(cp.lon - margin, cp.lon + margin) +
+  ylim(cp.lat - margin, cp.lat + margin)
+```
+
+This is the map of every post we have in our data. 538,151 data points, collected over 159 days (Feb 26 - Aug 3, 2014 - that's an average of 3,385 posts per day). You can see the outline of the park, the reservoir, the surrounding streets. This is the heart of what is probably the most important city on earth.
+
+## Individual Analysis
+
+I previously did extensive analysis on an aggregation of this data. Now, I want to make use of two variables I had to discard to do the aggregate analysis: 'link author', which is the IG account that made the post, and the true latitude and longitude of each point. When I joined the data with weather data, I had to send all of these points to a single point, the weather station in Central Park. Our region here became a single box. Now, I want to look inside the box.
+
+###Maps
+
+Before I dig deeply into the individual analysis, I want to make some maps.
+
+```{r}
+ggplot(df[df$sky ==1,], aes(x=lon, y=lat)) + 
+  geom_point(color='white', size = 1, alpha = 0.07) +
+  theme(panel.background = element_rect(fill = "black"),
+        panel.grid.major = element_line(color = "black"),
+        panel.grid.minor = element_line(color = "black"),
+        plot.background = element_rect(fill = "black"),
+        legend.position="none",
+        axis.text = element_text(size=rel(0.7), color='white'),
+        text = element_text(family='arial', face='plain', color='white', size = 15)) +
+  labs(x='LON',y='LAT', title='OVERCAST') +
+  xlim(cp.lon - margin, cp.lon + margin) +
+  ylim(cp.lat - margin, cp.lat + margin)
+```
+
+```{r}
+ggplot(df[df$precipitation > 0,], aes(x=lon, y=lat)) + 
+  geom_point(color='white', size = 1, alpha = 0.07) +
+  theme(panel.background = element_rect(fill = "black"),
+        panel.grid.major = element_line(color = "black"),
+        panel.grid.minor = element_line(color = "black"),
+        plot.background = element_rect(fill = "black"),
+        legend.position="none",
+        axis.text = element_text(size=rel(0.7), color='white'),
+        text = element_text(family='arial', face='plain', color='white', size = 15)) +
+  labs(x='LON',y='LAT', title='RAIN') +
+  xlim(cp.lon - margin, cp.lon + margin) +
+  ylim(cp.lat - margin, cp.lat + margin)
+```
+
+```{r}
+ggplot(df[df$hour == 4,], aes(x=lon, y=lat)) + 
+  geom_point(color='white', size = 1, alpha = 0.07) +
+  theme(panel.background = element_rect(fill = "black"),
+        panel.grid.major = element_line(color = "black"),
+        panel.grid.minor = element_line(color = "black"),
+        plot.background = element_rect(fill = "black"),
+        legend.position="none",
+        axis.text = element_text(size=rel(0.7), color='white'),
+        text = element_text(family='arial', face='plain', color='white', size = 15)) +
+  labs(x='LON',y='LAT', title='DEAD OF NIGHT') +
+  xlim(cp.lon - margin, cp.lon + margin) +
+  ylim(cp.lat - margin, cp.lat + margin)
+```
+
+```{r}
+ggplot(df[df$hour == 8,], aes(x=lon, y=lat)) + 
+  geom_point(color='white', size = 1, alpha = 0.07) +
+  theme(panel.background = element_rect(fill = "black"),
+        panel.grid.major = element_line(color = "black"),
+        panel.grid.minor = element_line(color = "black"),
+        plot.background = element_rect(fill = "black"),
+        legend.position="none",
+        axis.text = element_text(size=rel(0.7), color='white'),
+        text = element_text(family='arial', face='plain', color='white', size = 15)) +
+  labs(x='LON',y='LAT', title='MORNING') +
+  xlim(cp.lon - margin, cp.lon + margin) +
+  ylim(cp.lat - margin, cp.lat + margin)
+```
+
+Not a lot of geographic diversity across these different subsets of the data. It almost looks as if we've just turned down the brightness. Fortunately, this does indicate that there are some popular spots.
+
+
+
+
