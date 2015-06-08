@@ -30,10 +30,10 @@ def gen(coll):
                 counter +=1
                 print counter
                 yield item['_id'],
-                      item['postedTime'],
-                      item['location'],
-                      item['geo'],
-                      m['media_url']
+                item['postedTime'],
+                item['location'],
+                item['geo'],
+                m['media_url']
                 
 import pandas as pd
 df = pd.DataFrame(gen(coll))
