@@ -1,10 +1,10 @@
 import pandas as pd
 
-d = pd.read_csv('/Users/damoncrockett/Desktop/img_urls.csv')
+d = pd.read_csv('/data/damoncrockett/img_urls.csv')
 l = pd.DataFrame(d['0'].str.split('/',3).tolist(),
                 columns = ['a','b','c','d'])
 
-BASE_PATH = '/Users/damoncrockett/Desktop/test_imgs/'
+BASE_PATH = '/data/damoncrockett/test_imgs/'
 
 import requests
 import shutil
