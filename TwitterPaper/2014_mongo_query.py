@@ -8,9 +8,8 @@ conn 	= pymongo.MongoClient()
 db 	= conn.sample_tweets
 coll 	= db.sample_tweets_collection
 
-counter = -1
-
 def gen(coll):
+    counter = -1
     for item in coll.find():
         if ('_id' in item and 
         item['_id'] and
