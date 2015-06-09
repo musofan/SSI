@@ -16,7 +16,8 @@ projection = {'_id':1,
               'body':1,
               'actor.id':1}
 
-query_iterator = coll.find(query,projection)
+query_iterator = coll.find(query,projection,
+no_cursor_timeout=True)[63000000:64000000]
 
 import pandas as pd
 tmp_list = []
