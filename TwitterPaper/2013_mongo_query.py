@@ -8,32 +8,20 @@ conn    = pymongo.MongoClient()
 db      = conn.sample_tweets
 coll    = db.sample_tweets_collection
 
-coll.create_index('body')
-coll.create_index('actor.id')
-
 query = {'_id':{"$exists":1},
-         'body':{"$exists":1},
          'actor.id':{"$exists":1}}
 
 projection = {'_id':1,
-              'body':1,
               'actor.id':1}
 
 iterator = coll.find(query,projection)
 
-nrec = iterator.count()
-chunk_size = 10000000
-chunk_points = arange(0,nrec,chunk_size)
-chunk_points.append(nrec-1)
+chunk_1 = iterator[:55000000]
+chunk_2 - iterator[55000001:]
 
 import pandas as pd
+df = pd.DataFrame(chunk_1)
+df.to_csv('/data/damoncrockett/2013_id_actor_PART.csv',index=False)
+df = df.append(pd.DataFrame(chunk_2),ignore_index=True)
+df.to_csv('/data/damoncrockett/2013_id_actor_WHOLE.csv',index=False)
 
-for i in range(len(chunk_points)-1):
-    chunk = iterator[chunk_points[i]:chunk_points[i+1]]
-    print i
-    if i == 0:
-        df = pd.DataFrame(list(chunk))
-    else:
-        df = df.append(pd.DataFrame(list(chunk)),ignore_index=True)
-
-df.to_pickle('/data/damoncrockett/2013_tweets_actor_body.pickle')
