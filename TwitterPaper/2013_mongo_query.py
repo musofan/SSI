@@ -25,10 +25,10 @@ chunk_points.append(nrec-1)
 
 import pandas as pd
 
-for i in range(len(chunk_points)):
-    chunk = iterator[i:i+1]
-    print i
-    if i == 0:
+for point in chunk_points:
+    chunk = iterator[point:point+1]
+    print point
+    if point == 0:
         df = pd.DataFrame(list(chunk))
     else:
         df = df.append(pd.DataFrame(list(chunk)),ignore_index=True)
