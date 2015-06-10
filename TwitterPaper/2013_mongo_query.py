@@ -8,6 +8,9 @@ conn    = pymongo.MongoClient()
 db      = conn.sample_tweets
 coll    = db.sample_tweets_collection
 
+coll.create_index('body')
+coll.create_index('actor.id')
+
 query = {'_id':{"$exists":1},
          'body':{"$exists":1},
          'actor.id':{"$exists":1}}
@@ -25,22 +28,12 @@ chunk_points.append(nrec-1)
 
 import pandas as pd
 
-for point in chunk_points:
-    chunk = iterator[point:point+1]
-    print point
-    if point == 0:
+for i in range(len(chunk_points)-1):
+    chunk = iterator[chunk_points[i]:chunk_points[i+1]]
+    print i
+    if i == 0:
         df = pd.DataFrame(list(chunk))
     else:
         df = df.append(pd.DataFrame(list(chunk)),ignore_index=True)
 
 df.to_pickle('/data/damoncrockett/2013_tweets_actor_body.pickle')
-
-
-
-
-
-
-
-
-       
-
