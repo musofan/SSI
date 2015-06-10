@@ -17,11 +17,26 @@ projection = {'_id':1,
 iterator = coll.find(query,projection)
 
 chunk_1 = iterator[:55000000]
-chunk_2 - iterator[55000001:]
+chunk_2 = iterator[55000001:]
+
+counter=-1
+chunk_1_list = []
+for chunk in chunk_1:
+    counter+=1
+    print counter
+    chunk_1_list.append(chunk)
 
 import pandas as pd
-df = pd.DataFrame(chunk_1)
+df = pd.DataFrame(chunk_1_list)
 df.to_csv('/data/damoncrockett/2013_id_actor_PART.csv',index=False)
-df = df.append(pd.DataFrame(chunk_2),ignore_index=True)
+
+counter=-1
+chunk_2_list = []
+for chunk in chunk_2:
+    counter+=1
+    print counter
+    chunk_2_list.append(chunk)  
+
+df = df.append(pd.DataFrame(chunk_2_list),ignore_index=True)
 df.to_csv('/data/damoncrockett/2013_id_actor_WHOLE.csv',index=False)
 
