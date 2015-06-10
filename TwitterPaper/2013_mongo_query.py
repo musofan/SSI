@@ -16,17 +16,23 @@ projection = {'_id':1,
               'body':1,
               'actor.id':1}
 
-query_iterator = coll.find(query,projection,
-no_cursor_timeout=True)[63000000:64000000]
+iterator = coll.find(query,projection)
+
+nrec = iterator.count()
+chunk_size = 10000000
+chunk_points = arange(0,nrec,chunk_size)
+chunk_points.append(nrec-1)
 
 import pandas as pd
-tmp_list = []
-counter = -1
-for item in query_iterator:
-    counter+=1
-    print counter
-    tmp_list.append(item)    
-df = pd.DataFrame(tmp_list)
+
+for i in range(len(chunk_points)):
+    chunk = iterator[i:i+1]
+    print i
+    if i == 0:
+        df = pd.DataFrame(list(chunk))
+    else:
+        df = df.append(pd.DataFrame(list(chunk)),ignore_index=True)
+
 df.to_pickle('/data/damoncrockett/2013_tweets_actor_body.pickle')
 
 
