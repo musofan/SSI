@@ -15,23 +15,22 @@ projection = {'_id':1,
               'actor.id':1}
 
 counter=-1
-chunk_1_list = []
+chunk_list = []
 for chunklet in coll.find(query,projection).limit(55000000):
     counter+=1
     print counter
-    chunk_1_list.append(chunklet)
+    chunk_list.append(chunklet)
 
 import pandas as pd
-df = pd.DataFrame(chunk_1_list)
+df = pd.DataFrame(chunk_list)
 df.to_csv('/data/damoncrockett/2013_id_actor_PART.csv',index=False)
 
 counter=-1
-chunk_2_list = []
+chunk_list = []
 for chunklet in coll.find(query,projection).skip(55000001):
     counter+=1
     print counter
-    chunk_2_list.append(chunklet)  
+    chunk_list.append(chunklet)
 
-df = df.append(pd.DataFrame(chunk_2_list),ignore_index=True)
+df = df.append(pd.DataFrame(chunk_list),ignore_index=True)
 df.to_csv('/data/damoncrockett/2013_id_actor_WHOLE.csv',index=False)
-
