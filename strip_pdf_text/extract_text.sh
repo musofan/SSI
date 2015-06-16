@@ -1,10 +1,13 @@
 #!/bin/bash
 
-FILES=/Users/damoncrockett/Dropbox/cogs220/proposal/lit/one/*.pdf
+mkdir /Users/damoncrockett/Dropbox/cogs220/proposal/lit/text
+FILES=/Users/damoncrockett/Dropbox/cogs220/proposal/lit/*.pdf
 EXT=".txt"
+prefix="/Users/damoncrockett/Dropbox/cogs220/proposal/lit/text/"
 
 for f in $FILES
 do
-	pith=${f%%.*}
-	pdf2txt.py -o "$pith$EXT" "$f"
+	file=${f##*/}
+	pith=${file%.*}
+	pdf2txt.py -o "$prefix$pith$EXT" "$f"
 done
