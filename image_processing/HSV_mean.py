@@ -14,7 +14,7 @@ sat = []
 val = []
 counter = -1
 
-for file in glob.glob(os.path.join(input_path,'*.jpg')):
+for file in glob.glob(os.path.join(input_path,'*.png')):
     counter +=1
     
     try:
@@ -37,8 +37,13 @@ for file in glob.glob(os.path.join(input_path,'*.jpg')):
         print counter,file,'error'
         
 import pandas as pd
-pd.DataFrame({'filename':filename,
-              'hue':hue,
-              'sat':sat,
-              'val':val}).to_csv(input_path+descriptor+'_metadata.csv',
-              index=False)
+df = pd.DataFrame({'filename':filename,
+                   'hue':hue,
+                   'sat':sat,
+                   'val':val})
+
+df = df[df.val>0]
+df.to_csv(input_path+descriptor+'_metadata.csv',index=False)
+
+df['filename_mere'] = df.filename.str.split("/",5).str[5]
+df.to_csv(input_path+descriptor+'_metadata.txt',index=False,sep='\t')
