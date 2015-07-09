@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#IMAGE=/Users/damoncrockett/Desktop/SD/SD_R6C2.tif
-#CHUNKS=256
-#TARGET=/Users/damoncrockett/Desktop/slices
+IMAGE=/Users/damoncrockett/Desktop/SD_R6C2_scaled.tif
+CHUNKS=1024
+TARGET=/Users/damoncrockett/Desktop/scaled_slices
 #slice-image "$IMAGE" "$CHUNKS" -d
 
 PATH=/data/damoncrockett/streetview_sample/*.jpg
