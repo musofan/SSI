@@ -6,9 +6,10 @@ import sys
 input_path = sys.argv[1]
 num_slices = float(sys.argv[2])
 target = sys.argv[3]
+filetype = sys.argv[4]
 
 counter=-1
-for file in glob.glob(os.path.join(input_path,'*.jpg')):
+for file in glob.glob(os.path.join(input_path,'*.'+filetype)):
     counter +=1
     print counter
     try:

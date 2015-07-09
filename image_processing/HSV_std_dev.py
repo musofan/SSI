@@ -7,6 +7,7 @@ import numpy as np
 
 input_path = sys.argv[1]
 descriptor = sys.argv[2]
+filetype = sys.argv[3]
 
 filename = []
 hue = []
@@ -14,7 +15,7 @@ sat = []
 val = []
 counter = -1
 
-for file in glob.glob(os.path.join(input_path,'*.png')):
+for file in glob.glob(os.path.join(input_path,'*.'+filetype)):
     counter +=1
 
     try:
