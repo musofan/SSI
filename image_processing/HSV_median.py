@@ -21,13 +21,13 @@ for file in glob.glob(os.path.join(input_path,'*.png')):
     try:
         img = color.rgb2hsv(imread(file))
 
-        m_hue = np.mean(img[:,:,0])
+        m_hue = np.median(img[:,:,0])
         hue.append(m_hue)
 
-        m_sat = np.mean(img[:,:,1])
+        m_sat = np.median(img[:,:,1])
         sat.append(m_sat)
 
-        m_val = np.mean(img[:,:,2])
+        m_val = np.median(img[:,:,2])
         val.append(m_val)
          
         m_hsd = np.std(img[:,:,0])

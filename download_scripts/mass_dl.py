@@ -1,5 +1,6 @@
 import pandas as pd
 import sys
+import os
 
 infile = sys.argv[1]
 BASE_PATH = sys.argv[2]
@@ -12,7 +13,7 @@ import shutil
 n = len(df.index)
 
 for i in range(n):
-    path = BASE_PATH + df.media_url.loc[i].split('/',5)[4]
+    path = BASE_PATH + os.path.basename(df.media_url.loc[i])
     print i,path
 
     try:
