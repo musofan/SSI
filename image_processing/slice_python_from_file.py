@@ -4,7 +4,7 @@ import os
 import sys
 
 infile = sys.argv[1]
-num_slices = sys.argv[2]
+num_slices = int(sys.argv[2])
 target = sys.argv[3]
 
 df = pd.read_csv(infile)
