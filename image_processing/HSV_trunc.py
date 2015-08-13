@@ -13,7 +13,8 @@ filename = []
 hue = []
 sat = []
 val = []
-hsd = []
+
+
 counter = -1
 
 for file in glob.glob(os.path.join(input_path,'*.png')):
@@ -25,14 +26,11 @@ for file in glob.glob(os.path.join(input_path,'*.png')):
         m_hue = float(mode(img[:,:,0],axis=None)[0])
         hue.append(m_hue)
 
-        m_sat = np.median(img[:,:,1])
-        sat.append(m_sat)
+        i_sat = np.mean(img[:,:,1])
+        sat.append(i_sat)
 
-        m_val = np.median(img[:,:,2])
-        val.append(m_val)
-         
-        m_hsd = np.std(img[:,:,0])
-        hsd.append(m_hsd)
+        i_val = np.mean(img[:,:,2])
+        val.append(i_val)
 
         filename.append(file)
 
@@ -43,18 +41,12 @@ for file in glob.glob(os.path.join(input_path,'*.png')):
 
 import pandas as pd
 df = pd.DataFrame({'filename':filename,
-                   'hue_mode':hue,
-                   'sat_median':sat,
-                   'val_median':val,
-                   'hsd':hsd})
-
-#df = df[df.val>0]
-df['basename'] = df.filename.apply(os.path.basename)
-df['dummy'] = 5
-df.dummy[df.basename=="Untitled.png"] = 1
-df.dummy[df.basename=="Untitled2.png"] = 7
-df.sort("hue_mode",inplace=True)
-df['hue_rank'] = range(len(df.index))
+				   'hue_mode':hue,
+                   'sat_mean':sat,
+                   'val_mean':val})
+                
+df['base'] = df.filename.apply(os.path.basename)
+#df.sort("hue_mode",inplace=True)
 
 df.to_csv(input_path+descriptor+'_metadata.csv',index=False)
-df.to_csv(input_path+descriptor+'_metadata.txt',index=False,sep='\t')
+#df.to_csv(input_path+descriptor+'_metadata.txt',index=False,sep='\t')

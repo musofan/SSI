@@ -6,12 +6,13 @@ from skimage import color
 import numpy as np
 import pandas as pd
 
-data = pd.read_csv("/Users/damoncrockett/Desktop/lapland/data/all_fixed_lapland_filename.csv")
+data = pd.read_csv("/Users/damoncrockett/Desktop/la/la_sliced/256/slice_metadata.csv")
+data = data.sample(n=1548576)
+data.reset_index(drop=True,inplace=True)
 
 hue = []
 sat = []
 val = []
-hsd = []
 
 n = len(data.index)
 for i in range(n):
@@ -26,9 +27,6 @@ for i in range(n):
 
         m_val = np.mean(img[:,:,2])
         val.append(m_val)
-         
-        m_hsd = np.std(img[:,:,0])
-        hsd.append(m_hsd)
 
         print i
 
@@ -37,12 +35,10 @@ for i in range(n):
         hue.append("missing")
         sat.append("missing")
         val.append("missing")
-        hsd.append("missing")
 
 data['hue'] = hue
 data['sat'] = sat
 data['val'] = val
-data['hsd'] = hsd
 
-data.to_csv("/Users/damoncrockett/Desktop/lapland/data/all_fixed_lapland_filename_hsv.csv",
+data.to_csv("/Users/damoncrockett/Desktop/la/la_sliced/256/sample_slice_metadata.csv",
           index=False)

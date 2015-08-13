@@ -5,12 +5,50 @@ f = f[c(1,4,5,6,7,8,21)]
 
 df = merge(d,f,on='RegionName')
 
+g = read.csv("gallup.txt")
+
 # to keep all bbox-defined RegionNames
 #dfg = merge(df,g,on='RegionName',all.x=1)
 #dfg[c(1,36)][is.na(dfg$overall),]
 
 # to eliminate any that in Gallup are part of group
 dfg = merge(df,g,on='RegionName')
+
+str(dfg)
+
+overall = lm(data=dfg, overall~ Hbin.00 +
+               Hbin.01 +
+               Hbin.02 +
+               Hbin.03 +
+               Hbin.04 +
+               Hbin.05 +
+               Hbin.06 +
+               Hbin.07 +
+               Hbin.08 +
+               Hbin.09 +
+               Hbin.10 +
+               Hbin.11 +
+               Hbin.12 + 
+               num.faces.alt + 
+               face.present.alt + 
+               solo.face.alt +
+               face.present.rate.alt +
+               solo.face.rate.alt +
+               social.face.rate.alt +
+               num.people.social.faces.alt +
+               social.face.alt +
+               num.unique.images +
+               num.unique.face.images.alt)
+summary(overall)
+
+summary(lm(data=dfg,overall~solo.face.rate.alt +
+             social.face.rate.alt +
+             face.present.rate.alt))
+
+
+###################
+## Comparisons ####
+###################
 
 #primary model: gallup overall
 overall.lm = lm(data=dfg, 

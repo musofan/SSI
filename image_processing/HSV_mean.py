@@ -15,7 +15,7 @@ val = []
 hsd = []
 counter = -1
 
-for file in glob.glob(os.path.join(input_path,'*.png')):
+for file in glob.glob(os.path.join(input_path,'*.jpg')):
     counter +=1
 
     try:
@@ -48,7 +48,7 @@ df = pd.DataFrame({'filename':filename,
                    'hsd':hsd})
 
 #df = df[df.val>0]
-df.to_csv(input_path+descriptor+'_metadata.csv',index=False)
-
 df['basename'] = df.filename.apply(os.path.basename)
+
+df.to_csv(input_path+descriptor+'_metadata.csv',index=False)
 #df.to_csv(input_path+descriptor+'_metadata.txt',index=False,sep='\t')
